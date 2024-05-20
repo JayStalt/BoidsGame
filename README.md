@@ -7,5 +7,6 @@ To run the game, clone the repository and navigate to the boids folder, in the b
 
 
 Game Footage (Full game footage is available in the folder)
+
 https://github.com/JoshuaRemington/BoidsGame/assets/107597790/cace012f-ff14-4fe0-983e-cf4fb3866e2d
 
