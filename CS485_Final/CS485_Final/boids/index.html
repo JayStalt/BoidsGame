@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/addons/p5.dom.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/addons/p5.sound.min.js"></script>
+
+    <script src="js/sprite.js"></script>
+
+</head>
+<body style="">
+
+<canvas id='mycanvas' style="">
+</canvas>
+
+<style>
+    canvas{
+        display: block;
+    }
+    body {
+        /*height: 100%;*/
+        /*background-image: url("imgs/titleScreen.png");  !* DISABLE TITLE*!*/
+        margin: 0;
+        background-position: left top;
+        background-repeat: no-repeat;
+        background-size: cover, contain, auto;
+        background-color: #ffffff;
+        overflow: hidden;
+    }
+
+    /*Buttons*/
+    .button {
+        display: inline-block;
+        padding: 1px 15px;
+        font-size: 50px;
+        cursor: crosshair;
+        text-align: center;
+        text-decoration: none;
+        outline: none;
+        color: #fffeb4;
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 9px rgba(0, 45, 246, 0.32);
+        margin: 8px 20px 8px 8px;
+    }
+    .button:active {
+        background-color: #3e8e41;
+        box-shadow: 0 5px rgba(59, 161, 0, 0.27);
+        transform: translateY(4px);
+    }
+    .button9 {
+        background-color: #2b9872;
+        box-shadow: 0 9px #0b3d0a;
+        width: 100%;
+        height: 100%;
+    }
+    .button9:hover {
+        background-color: #2E86AB !important;
+    }
+    .start_game {
+        position: relative;
+        background-position: left top;
+        background-repeat: no-repeat;
+        background-size: contain;
+        box-sizing: content-box;
+        width: 100%;
+        height: 100%;
+    }
+    .start_game_button {
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 400px;
+        height: 60px;
+    }
+
+    .boxy1 {
+        /*background-image: url("imgs/box_texture_3.jpeg");*/
+        background-position: center center;
+        position: absolute;
+        top: 0px;
+        left: 0%;
+        transform: translate3d(+10%, 0, 0);
+        width: fit-content;
+        z-index: 0;
+        background-size: cover, contain, auto;
+        border: 2px solid #ff0c0c;
+        padding: 8px;
+        background-color: rgba(0, 255, 187, 0.47);
+    }
+    .boxy2 {
+        /*background-image: url("imgs/box_texture_3.jpeg");*/
+        background-position: center center;
+        position: absolute;
+        top: 0px;
+        right: 0px;
+        transform: translate3d(-10%, 0, 0);
+        width: fit-content;
+        z-index: 0;
+        background-size: cover, contain, auto;
+        border: 2px solid #ff0c0c;
+        padding: 8px;
+        background-color: rgba(186, 182, 248, 0.75);
+    }
+</style>
+
+<div id="main" style="display:none">
+    <div class="start_game">
+        <div class="start_game_button">
+            <button class="button button9" id="but_y"></button>
+        </div>
+    </div>
+</div>
+<div class="boxy1">
+    <h3>PLAYER 1 SCORE:</h3>
+    <p>Total: <span id="playerOneScore"></span></p>
+</div>
+<div class="boxy2">
+    <h3>PLAYER 2 SCORE:</h3>
+    <p>Total: <span id="playerTwoScore"></span></p>
+</div>
+
+<script>
+    const canvas = document.querySelector("canvas");
+    const sprites_to_draw = new Array(3);
+    var draw_loop_timeout;
+    var img = new Image();
+
+    var imageCache = {};
+
+    sprites_to_draw[0] = new Array(0); //background and
+    sprites_to_draw[1] = new Array(0); //boids and
+    sprites_to_draw[2] = new Array(0); //foreground
+
+    var currSprite = 'idle';
+    var keyChanged = false;
+    const numBoids = 200;
+
+    // let alignSlider, cohesionSlider, separationSlider;  // DEBUG SLIDERS
+
+    let alignFactor = 60
+    let separationFactor = 40
+    let cohesionFactor = 60
+    let mForce = 0.1
+    let mSpeed = 5
+    let currBoidSprite = 'jelly_1';
+    // let separation_mod = 1.5;
+    // let alignment_mod = 1;
+    // let cohesion_mod = 0.25;
+
+    let separation_mod = 1.5;
+    let alignment_mod = 1;
+    let cohesion_mod = 0.75;
+
+    let mapTransition = false;
+    var currBackground = 'center';
+    let prev_Background = 'center';
+    let stagesComplete = 0;
+
+    let boidSpawnX = Math.floor(Math.random() * (window.innerWidth-100));
+    let boidSpawnY = Math.floor(Math.random() * (window.innerHeight-100));
+
+    // setTimeout(function () {                                                               // DISABLE TITLE
+    //     $('.button').prop('disabled', true); // Disable button until loading finished      // DISABLE TITLE
+    //     $('.button').text("LOADING");                                                      // DISABLE TITLE
+    //     $('#but_y').css('background-color', '#b60000');                                    // DISABLE TITLE
+    //                                                                                        // DISABLE TITLE
+    //     // Display 'Start Game' Button                                                     // DISABLE TITLE
+    //     $('#main').show();                                                                 // DISABLE TITLE
+    //                                                                                        // DISABLE TITLE
+    //     // initializeGame();                                                               // DISABLE TITLE
+    // }, 2);                                                                                 // DISABLE TITLE
+
+    function setup(){
+
+        console.log(Math.round(window.innerWidth - 200))
+        console.log(Math.round(window.innerWidth))
+
+        //Note: PLAYER SPRITES
+        $.getJSON( "../Penguins/animationData.json", function( data ) {
+            console.log("============== STARTING ==============");
+            sprites_to_draw[2].push( new Sprite(data, 20 , Math.round(window.innerHeight - 150), currSprite, true) );
+            sprites_to_draw[2].push( new Sprite(data, Math.round(window.innerWidth - 200), Math.round(window.innerHeight - 150), currSprite, true) );
+
+        });
+
+        //Note: BOID SPRITES
+        $.getJSON( "../Boid/animationData.json", function( data ) {
+            console.log("============== STARTING ==============");
+            for(let i = 0; i < numBoids; i++)
+            {
+                sprites_to_draw[1].push( new Boid(data, boidSpawnX, boidSpawnY, currBoidSprite, true) );
+            }
+        });
+
+        //Note: BACKGROUND SPRITES
+        $.getJSON( "../Background/animationData.json", function( data ) {
+            sprites_to_draw[0].push( new BackgroundSprite(data, currBackground) );
+        });
+        gameStarted('game_started');
+
+        // setTimeout(function () {                                           // DISABLE TITLE
+        //     $('.button').text("START GAME");                               // DISABLE TITLE
+        //     $('#but_y').css('background-color', '#43b209');                // DISABLE TITLE
+        //     $('.button').prop('disabled', false);                          // DISABLE TITLE
+        //     // $('.button').show();                                        // DISABLE TITLE
+        // }, 20);                                                            // DISABLE TITLE
+    }
+    function debuggingOutput(message, color) {
+        console.log("%c" + message, "color:" + color + ";font-weight:bold;");
+    }
+    var keyStates = {};
+    var keyStatesPlayer1 = {};
+    var keyStatesPlayer2 = {};
+    function gameStarted() {
+        $(document).ready(function () {
+            console.log("Page is now ready");
+            resize();
+            // alignSlider = createSlider(0, 2, 1.5, 0.1);
+            // cohesionSlider = createSlider(0, 2, 1, 0.1);
+            // separationSlider = createSlider(0, 2, 2, 0.1);
+
+            // createCanvas(600, 400); // DEBUGGING BOIDS
+            // img.onload = function () {
+            //     var ctx = canvas.getContext('2d');
+            //     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            // };
+            // img.src = 'imgs/bk2.png';
+            draw_loop_timeout = setInterval(draw_loop, 33);
+        });
+
+        window.addEventListener('resize', resize);
+
+        document.addEventListener('keydown', function (event) {
+            if ([p1_up, p1_down, p1_right, p1_left].includes(event.key)) {
+                keyStatesPlayer1[event.key] = true;
+            } else if ([p2_up, p2_down, p2_right, p2_left].includes(event.key)) {
+                keyStatesPlayer2[event.key] = true;
+            }
+        });
+
+        document.addEventListener('keyup', function (event) {
+            if ([p1_up, p1_down, p1_right, p1_left].includes(event.key)) {
+                delete keyStatesPlayer1[event.key];
+            } else if ([p2_up, p2_down, p2_right, p2_left].includes(event.key)) {
+                delete keyStatesPlayer2[event.key];
+            }
+        });
+
+        let p1_up = 'w';
+        let p1_down = 's';
+        let p1_right = 'd';
+        let p1_left = 'a';
+
+        let p2_up = 'ArrowUp';
+        let p2_down = 'ArrowDown';
+        let p2_right = 'ArrowRight';
+        let p2_left = 'ArrowLeft';
+
+        function updateSpriteMovement(player, index) {
+            let keyStates = (player === 1) ? keyStatesPlayer1 : keyStatesPlayer2;
+            let up    =  (player === 1) ? p1_up : p2_up;
+            let down  =  (player === 1) ? p1_down : p2_down;
+            let right =  (player === 1) ? p1_right : p2_right;
+            let left  =  (player === 1) ? p1_left : p2_left;
+
+            let sprite = sprites_to_draw[2][index];
+            sprite.state = 'idle'; // Default state
+
+            if (Object.keys(keyStates).length === 0) {
+                sprite.state = 'idle';
+
+            }
+            else {
+                var north = keyStates[up];
+                var south = keyStates[down];
+                var east = keyStates[right];
+                var west = keyStates[left];
+
+                if (north && east) {
+                    sprite.state = 'walk_E';
+                } else if (north && west) {
+                    sprite.state = 'walk_W';
+                } else if (south && east) {
+                    sprite.state = 'walk_E';
+                } else if (south && west) {
+                    sprite.state = 'walk_W';
+
+                } else {
+                    if (north) {
+                        sprite.state = 'walk_N';
+                    }
+                    if (south) {
+                        sprite.state = 'walk_S';
+                    }
+                    if (east) {
+                        sprite.state = 'walk_E';
+                    }
+                    if (west) {
+                        sprite.state = 'walk_W';
+                    }
+                }
+            }
+        }
+
+        let start, previousTimeStamp;
+
+        function draw_loop() {
+            if (start === undefined) {
+                start = Date.now();
+            }else if ( (Date.now() - start) < 30){
+                requestAnimationFrame(draw_loop);
+                return;
+            };
+            start = Date.now();
+
+            updateSpriteMovement(1, 0);
+            updateSpriteMovement(2, 1);
+
+            var background_length = sprites_to_draw[0].length;
+            var boids_length = sprites_to_draw[1].length;
+            var foreground_length = sprites_to_draw[2].length;
+            var has_background_changed = false;
+
+            if(mapTransition){
+                $.getJSON( "../Boid/animationData.json", function( data ) {
+                    sprites_to_draw[1] = [];
+
+                    for(let i = 0; i < numBoids; i++)
+                    {
+                        // sprites_to_draw[1].push( new Boid(data, window.innerWidth - 100 , window.innerHeight - 100, currBoidSprite, true) );
+                        sprites_to_draw[1].push( new Boid(data, boidSpawnX , boidSpawnY, currBoidSprite, true) );
+
+                    }
+                });
+                $.getJSON( "../Background/animationData.json", function( data ) {
+                    console.log("CURRENT BACK: " + currBackground);
+                    sprites_to_draw[0] = [];
+
+                    sprites_to_draw[0].push( new BackgroundSprite(data, currBackground) );
+                });
+
+                mapTransition = false;
+            }
+
+            //Draw background sprites
+            for (var i = 0; i < background_length; i++) {
+                has_background_changed = sprites_to_draw[0][i].draw();
+            }
+
+            // // Draw the background
+            // if (sprites_to_draw[0].length > 0) {
+            //     sprites_to_draw[0].forEach(backgroundSprite => {
+            //         backgroundSprite.draw();
+            //     });
+            // }
+
+            // Draw Boid Sprites
+            for(var i = 0; i < boids_length; i++) {
+                sprites_to_draw[1][i].draw({
+                    'boids': sprites_to_draw[1]
+                });
+            }
+
+            //Draw foreground sprites
+            for (var i = 0; i < foreground_length; i++) {
+                sprites_to_draw[2][i].draw({
+                        'has_background_changed': has_background_changed,
+                        'key_change': keyChanged
+                    }
+                );
+            }
+
+            // sprites_to_draw[2].forEach(boid => {
+            //     sprites_to_draw[1].forEach(sprite => {
+            //         if (checkCollision(boid, sprite)) {
+            //             sprites_to_draw[1].splice(sprites_to_draw[1].indexOf(sprite), 1);
+            //         }
+            //     });
+            // });
+            // sprites_to_draw[2].forEach(boid => {
+            //     sprites_to_draw[1].forEach((sprite, index) => {
+            //         if (checkCollision(boid, sprites_to_draw[2][0], 0)) {
+            //             sprites_to_draw[1].splice(index, 1);
+            //         } else if (checkCollision(boid, sprites_to_draw[2][1], 1)) {
+            //             sprites_to_draw[1].splice(index, 1);
+            //         }
+            //     });
+            // });
+
+            sprites_to_draw[1].forEach((boid, index) => {
+                if (checkCollision(boid, sprites_to_draw[2][0], 0)) {  // Check collisions for player 1
+                    sprites_to_draw[1].splice(index, 1);  // Remove the boid if there is a collision
+                }
+                if (checkCollision(boid, sprites_to_draw[2][1], 1)) {  // Check collisions for player 2
+                    sprites_to_draw[1].splice(index, 1);  // Remove the boid if there is a collision
+                }
+            });
+            displayScore.innerHTML  = player1_score;
+            displayScore2.innerHTML = player2_score;
+            requestAnimationFrame(draw_loop);
+        }
+    }
+    let player1_score = 0;
+    var displayScore = document.getElementById("playerOneScore");
+
+    let player2_score = 0;
+    var displayScore2 = document.getElementById("playerTwoScore");
+
+
+    function checkCollision(boid, sprite, index) {
+        //Note: Action to take for proximity
+        let distance = calculateDistance(boid, sprite);
+
+        if(distance < 75){
+            // Calculate Position of Boid Hitbox
+            let boid_left = boid.x;
+            let boid_right = boid.x + boid.w;
+            let boid_top = boid.y;
+            let boid_bottom = boid.y + boid.h;
+
+            // Calculate Position of Sprite Hitbox
+            let sprite_left = sprite.x;
+            let sprite_right = sprite.x + sprite.w;
+            let sprite_top = sprite.y;
+            let sprite_bottom = sprite.y + sprite.h;
+
+            // Check if the hitboxes have overlapped
+            if (boid_right > sprite_left && boid_left < sprite_right && boid_bottom > sprite_top && boid_top < sprite_bottom) {
+                if(index === 0){
+                    player1_score++;
+                    document.getElementById("playerOneScore").innerHTML = player1_score;
+                }else if (index === 1){
+                    player2_score++;
+                    document.getElementById("playerOneScore").innerHTML = player2_score;
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function calculateDistance(obj1, obj2) {
+        let dx = (obj1.x + obj1.w / 2) - (obj2.x + obj2.w / 2);
+        let dy = (obj1.y + obj1.h / 2) - (obj2.y + obj2.h / 2);
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function resize(){
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+
+    $('.button').click(function() {
+        var buttonId = this.id.replace('but_', '').toUpperCase();
+        var nextState = undefined;
+
+        if(buttonId === 'Y'){
+            nextState = 'game_started';
+        }
+        $('body').css('background-image', 'none');
+
+        $('.button').hide();
+        $('#main').hide();
+        gameStarted(nextState);
+    });
+</script>
+</body>
+</html>
+
