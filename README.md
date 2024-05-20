@@ -5,5 +5,7 @@ This is a 2D simulation game implemented using HTML5 Canvas and JavaScript, feat
 ## Run Game
 To run the game, clone the repository and navigate to the boids folder, in the boids folder, open index.html to access the game. Certain browser may block JSON data, so you may have to run a local server.
 
+
+Game Footage (Full game footage is available in the folder)
 https://github.com/JoshuaRemington/BoidsGame/assets/107597790/cace012f-ff14-4fe0-983e-cf4fb3866e2d
 
