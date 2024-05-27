@@ -36,7 +36,7 @@ class Sprite {
         var ctx = canvas.getContext('2d');
         if(this.sprite_json[this.root_e][this.state][this.cur_frame]['img'] == null){
             this.sprite_json[this.root_e][this.state][this.cur_frame]['img'] = new Image();
-            this.sprite_json[this.root_e][this.state][this.cur_frame]['img'].src = '../Penguins/' + this.root_e + '/' + this.state + '/' + this.cur_frame + '.png';
+            this.sprite_json[this.root_e][this.state][this.cur_frame]['img'].src = '../Sharks/' + this.root_e + '/' + this.state + '/' + this.cur_frame + '.png';
         }
 
         if( this.cur_bk_data != null && state['has_background_changed'] === false){

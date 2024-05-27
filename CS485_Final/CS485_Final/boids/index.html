@@ -179,7 +179,7 @@
         console.log(Math.round(window.innerWidth))
 
         //Note: PLAYER SPRITES
-        $.getJSON( "../Penguins/animationData.json", function( data ) {
+        $.getJSON( "../Sharks/animationData.json", function( data ) {
             console.log("============== STARTING ==============");
             sprites_to_draw[2].push( new Sprite(data, 20 , Math.round(window.innerHeight - 150), currSprite, true) );
             sprites_to_draw[2].push( new Sprite(data, Math.round(window.innerWidth - 200), Math.round(window.innerHeight - 150), currSprite, true) );
